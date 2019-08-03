@@ -1,0 +1,63 @@
+---
+title: Multivariate Elastic Net
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{vignette}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Installation
+
+Install the current release from [CRAN](https://CRAN.R-project.org/package=joinet):
+
+```{r,eval=FALSE}
+install.packages("joinet")
+```
+
+or the latest development version from [GitHub](https://github.com/rauschenberger/joinet):
+
+```{r,eval=FALSE}
+#install.packages("devtools")
+devtools::install_github("rauschenberger/joinet")
+```
+
+Access the help pages with:
+
+```{r,eval=FALSE}
+?joinet
+help(joinet)
+```
+
+<!--
+```{r,eval=FALSE}
+#install.packages("plsgenomics")
+data(Ecoli,package="plsgenomics")
+X <- Ecoli$CONNECdata
+Y <- Ecoli$GEdata
+loss <- joinet:::cv.joinet(Y=Y,X=X)
+```
+
+```{r,eval=FALSE}
+#install.packages("BiocManager")
+#BiocManager::install("mixOmics")
+data(liver.toxicity,package="mixOmics")
+X <- liver.toxicity$gene
+Y <- liver.toxicity$clinic
+Y$Cholesterol.mg.dL. <- -Y$Cholesterol.mg.dL.
+loss <- joinet:::cv.joinet(Y=Y,X=X)
+```
+
+-->
+
+## Reference
+
+Armin Rauschenberger and Enrico Glaab (2019).
+"Multivariate regression through stacked generalisation".
+*Manuscript in preparation.*

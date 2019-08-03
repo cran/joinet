@@ -1,0 +1,16 @@
+---
+title: Stacked Elastic Net
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{article}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+The `joinet` manuscript is in preparation. Click [here](https://CRAN.R-project.org/package=joinet) for the R package.
+
+## Reference
+
+Armin Rauschenberger and Enrico Glaab (2019).
+"Multivariate regression through stacked generalisation".
+*Manuscript in preparation.*
