@@ -56,7 +56,8 @@
 #' 
 #' @references 
 #' Armin Rauschenberger, Enrico Glaab (2019)
-#' "Multivariate elastic net regression through stacked generalisation"
+#' "joinet: predicting correlated outcomes jointly
+#' to improve clinical prognosis"
 #' \emph{Manuscript in preparation}.
 #' 
 #' @details
@@ -79,11 +80,17 @@
 #' The slots \code{base} and \code{meta} each contain
 #' \eqn{q} \code{\link[glmnet]{cv.glmnet}}-like objects.
 #' 
+#' @seealso
+#' \code{\link{cv.joinet}}, vignette
+#' 
 #' @examples
-#' n <- 30; q <- 2; p <- 20
-#' Y <- matrix(rnorm(n*q),nrow=n,ncol=q)
+#' n <- 50; p <- 100; q <- 3
 #' X <- matrix(rnorm(n*p),nrow=n,ncol=p)
+#' Y <- replicate(n=q,expr=rnorm(n=n,mean=rowSums(X[,1:5])))
 #' object <- joinet(Y=Y,X=X)
+#' 
+#' \dontrun{
+#' browseVignettes("joinet") # further examples}
 #' 
 joinet <- function(Y,X,family="gaussian",nfolds=10,foldid=NULL,type.measure="deviance",alpha.base=1,alpha.meta=0,...){
   
@@ -97,7 +104,7 @@ joinet <- function(Y,X,family="gaussian",nfolds=10,foldid=NULL,type.measure="dev
   cornet:::.check(x=Y,type="matrix",miss=TRUE)
   if(any(stats::cor(Y,use="pairwise.complete.obs")<0,na.rm=TRUE)){warning("Negative correlation!",call.=FALSE)}
   cornet:::.check(x=X,type="matrix")
-  #cornet:::.check(x=family,type="string",values=c("gaussian","binomial","poisson"))
+  #cornet:::.check(x=family,type="vector",values=c("gaussian","binomial","poisson"))
   if(nrow(Y)!=nrow(X)){stop("Contradictory sample size.",call.=FALSE)}
   cornet:::.check(x=nfolds,type="scalar",min=3)
   cornet:::.check(x=foldid,type="vector",values=seq_len(nfolds),null=TRUE)
@@ -254,13 +261,11 @@ joinet <- function(Y,X,family="gaussian",nfolds=10,foldid=NULL,type.measure="dev
 #' with \eqn{n} rows (samples) and \eqn{q} columns (variables).
 #' 
 #' @examples
-#' n <- 30; q <- 2; p <- 20
-#' #Y <- matrix(rnorm(n*q),nrow=n,ncol=q)
-#' Y <- matrix(rbinom(n=n*q,size=1,prob=0.5),nrow=n,ncol=q)
-#' #Y <- matrix(rpois(n=n*q,lambda=4),nrow=n,ncol=q)
+#' n <- 50; p <- 100; q <- 3
 #' X <- matrix(rnorm(n*p),nrow=n,ncol=p)
-#' object <- joinet(Y=Y,X=X,family="binomial")
-#' y_hat <- predict(object,newx=X)
+#' Y <- replicate(n=q,expr=rnorm(n=n,mean=rowSums(X[,1:5])))
+#' object <- joinet(Y=Y,X=X)
+#' predict(object,newx=X)
 #' 
 predict.joinet <- function(object,newx,type="response",...){
   if(length(list(...))!=0){warning("Ignoring argument.",call.=FALSE)}
@@ -326,9 +331,9 @@ predict.joinet <- function(object,newx,type="response",...){
 #' in a matrix with \eqn{p} rows (inputs) and \eqn{q} columns.
 #' 
 #' @examples
-#' n <- 30; q <- 2; p <- 20
-#' Y <- matrix(rnorm(n*q),nrow=n,ncol=q)
+#' n <- 50; p <- 100; q <- 3
 #' X <- matrix(rnorm(n*p),nrow=n,ncol=p)
+#' Y <- replicate(n=q,expr=rnorm(n=n,mean=rowSums(X[,1:5])))
 #' object <- joinet(Y=Y,X=X)
 #' coef <- coef(object)
 #' 
@@ -393,9 +398,9 @@ coef.joinet <- function(object,...){
 #' in the row on the outcomes in the column.
 #' 
 #' @examples
-#' n <- 30; q <- 2; p <- 20
-#' Y <- matrix(rnorm(n*q),nrow=n,ncol=q)
+#' n <- 50; p <- 100; q <- 3
 #' X <- matrix(rnorm(n*p),nrow=n,ncol=p)
+#' Y <- replicate(n=q,expr=rnorm(n=n,mean=rowSums(X[,1:5])))
 #' object <- joinet(Y=Y,X=X)
 #' weights(object)
 #' 
@@ -420,7 +425,7 @@ print.joinet <- function(x,...){
 #' Model comparison
 #'
 #' @description
-#' Compares univariate and multivariate regression
+#' Compares univariate and multivariate regression.
 #' 
 #' @inheritParams joinet
 #' 
@@ -452,13 +457,54 @@ print.joinet <- function(x,...){
 #' 
 #' @return 
 #' This function returns a matrix with \eqn{q} columns,
-#' including the cross-validated loss.
+#' including the cross-validated loss from the univariate models
+#' (\code{base}), the multivariate models (\code{meta}),
+#' and the intercept-only models (\code{none}).
 #' 
 #' @examples
-#' n <- 40; q <- 2; p <- 20
-#' Y <- matrix(rnorm(n*q),nrow=n,ncol=q)
+#' n <- 50; p <- 100; q <- 3
 #' X <- matrix(rnorm(n*p),nrow=n,ncol=p)
+#' Y <- replicate(n=q,expr=rnorm(n=n,mean=rowSums(X[,1:5])))
 #' cv.joinet(Y=Y,X=X)
+#' 
+#' \dontrun{
+#' # correlated features
+#' n <- 50; p <- 100; q <- 3
+#' mu <- rep(0,times=p)
+#' Sigma <- 0.90^abs(col(diag(p))-row(diag(p)))
+#' X <- MASS::mvrnorm(n=n,mu=mu,Sigma=Sigma)
+#' mu <- rowSums(X[,sample(seq_len(p),size=5)])
+#' Y <- replicate(n=q,expr=rnorm(n=n,mean=mu))
+#' #Y <- t(MASS::mvrnorm(n=q,mu=mu,Sigma=diag(n)))
+#' cv.joinet(Y=Y,X=X)}
+#' 
+#' \dontrun{
+#' # other distributions
+#' n <- 50; p <- 100; q <- 3
+#' X <- matrix(rnorm(n*p),nrow=n,ncol=p)
+#' eta <- rowSums(X[,1:5])
+#' Y <- replicate(n=q,expr=rbinom(n=n,size=1,prob=1/(1+exp(-eta))))
+#' cv.joinet(Y=Y,X=X,family="binomial")
+#' Y <- replicate(n=q,expr=rpois(n=n,lambda=exp(scale(eta))))
+#' cv.joinet(Y=Y,X=X,family="poisson")}
+#' 
+#' \dontrun{
+#' # uncorrelated outcomes
+#' n <- 50; p <- 100; q <- 3
+#' X <- matrix(rnorm(n*p),nrow=n,ncol=p)
+#' y <- rnorm(n=n,mean=rowSums(X[,1:5]))
+#' Y <- cbind(y,matrix(rnorm(n*(q-1)),nrow=n,ncol=q-1))
+#' cv.joinet(Y=Y,X=X)}
+#' 
+#' \dontrun{
+#' # sparse and dense models
+#' n <- 50; p <- 100; q <- 3
+#' X <- matrix(rnorm(n*p),nrow=n,ncol=p)
+#' Y <- replicate(n=q,expr=rnorm(n=n,mean=rowSums(X[,1:5])))
+#' set.seed(1) # fix folds
+#' cv.joinet(Y=Y,X=X,alpha.base=1) # lasso
+#' set.seed(1)
+#' cv.joinet(Y=Y,X=X,alpha.base=0) # ridge}
 #' 
 cv.joinet <- function(Y,X,family="gaussian",nfolds.ext=5,nfolds.int=10,foldid.ext=NULL,foldid.int=NULL,type.measure="deviance",alpha.base=1,alpha.meta=0,mnorm=FALSE,spls=FALSE,sier=FALSE,mrce=FALSE,...){
   
