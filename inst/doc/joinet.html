@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
 
@@ -116,9 +115,6 @@ padding-right: 2em;
 font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 font-size: 14px;
 line-height: 1.35;
-}
-#header {
-text-align: center;
 }
 #TOC {
 clear: both;
@@ -287,7 +283,8 @@ code > span.st { color: #d14; }
 code > span.co { color: #888888; font-style: italic; } 
 code > span.ot { color: #007020; } 
 code > span.al { color: #ff0000; font-weight: bold; } 
-code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
 </style>
 
 
@@ -370,31 +367,15 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb10-5" title="5"><span class="kw">weights</span>(object)</a></code></pre></div>
 <p>The function <code>cv.joinet</code> compares the predictive performance of univariate (<code>base</code>) and multivariate (<code>meta</code>) regression by nested cross-validation. The argument <code>type.measure</code> determines the loss function.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">cv.joinet</span>(<span class="dt">Y=</span>Y,<span class="dt">X=</span>X,<span class="dt">family=</span>family)</a></code></pre></div>
-<pre><code>##          [,1]     [,2]
-## base 1.204741 1.523550
-## meta 1.161487 1.283678
-## none 3.206394 3.495571</code></pre>
+<pre><code>##           [,1]     [,2]
+## base  1.204741 1.523550
+## meta  1.185200 1.278125
+## FALSE       NA       NA
+## none  3.206394 3.495571</code></pre>
 </div>
 <div id="reference" class="section level2">
 <h2>Reference</h2>
-<p>Armin Rauschenberger and Enrico Glaab (2019). “joinet: predicting correlated outcomes jointly to improve clinical prognosis”. <em>Manuscript in preparation.</em> <!--
-
-```r
-#install.packages("plsgenomics")
-data(Ecoli,package="plsgenomics")
-X <- Ecoli$CONNECdata
-Y <- Ecoli$GEdata
-loss <- cv.joinet(Y=Y,X=X)
-
-#install.packages("BiocManager")
-#BiocManager::install("mixOmics")
-data(liver.toxicity,package="mixOmics")
-X <- liver.toxicity$gene
-Y <- liver.toxicity$clinic
-Y$Cholesterol.mg.dL. <- -Y$Cholesterol.mg.dL.
-loss <- cv.joinet(Y=Y,X=X)
-```
---></p>
+<p>Armin Rauschenberger and Enrico Glaab (2020). “Predicting correlated outcomes from molecular data”. <em>Manuscript in preparation.</em></p>
 </div>
 
 

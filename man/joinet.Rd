@@ -4,8 +4,17 @@
 \alias{joinet}
 \title{Multivariate Elastic Net Regression}
 \usage{
-joinet(Y, X, family = "gaussian", nfolds = 10, foldid = NULL,
-  type.measure = "deviance", alpha.base = 1, alpha.meta = 0, ...)
+joinet(
+  Y,
+  X,
+  family = "gaussian",
+  nfolds = 10,
+  foldid = NULL,
+  type.measure = "deviance",
+  alpha.base = 1,
+  alpha.meta = 1,
+  ...
+)
 }
 \arguments{
 \item{Y}{outputs\strong{:}
@@ -74,9 +83,8 @@ browseVignettes("joinet") # further examples}
 
 }
 \references{
-Armin Rauschenberger, Enrico Glaab (2019)
-"joinet: predicting correlated outcomes jointly
-to improve clinical prognosis"
+Armin Rauschenberger, Enrico Glaab (2020)
+"Predicting correlated outcomes from molecular data"
 \emph{Manuscript in preparation}.
 }
 \seealso{

@@ -4,10 +4,23 @@
 \alias{cv.joinet}
 \title{Model comparison}
 \usage{
-cv.joinet(Y, X, family = "gaussian", nfolds.ext = 5, nfolds.int = 10,
-  foldid.ext = NULL, foldid.int = NULL, type.measure = "deviance",
-  alpha.base = 1, alpha.meta = 0, mnorm = FALSE, spls = FALSE,
-  sier = FALSE, mrce = FALSE, cvpred = FALSE, ...)
+cv.joinet(
+  Y,
+  X,
+  family = "gaussian",
+  nfolds.ext = 5,
+  nfolds.int = 10,
+  foldid.ext = NULL,
+  foldid.int = NULL,
+  type.measure = "deviance",
+  alpha.base = 1,
+  alpha.meta = 1,
+  compare = FALSE,
+  mice = FALSE,
+  cvpred = FALSE,
+  times = FALSE,
+  ...
+)
 }
 \arguments{
 \item{Y}{outputs\strong{:}
@@ -48,10 +61,18 @@ numeric between \eqn{0} (ridge) and \eqn{1} (lasso)}
 \item{alpha.meta}{elastic net mixing parameter for meta learner\strong{:}
 numeric between \eqn{0} (ridge) and \eqn{1} (lasso)}
 
-\item{mnorm, spls, sier, mrce}{experimental arguments\strong{:}
-logical (requires packages \code{spls}, \code{SiER}, or \code{MRCE})}
+\item{compare}{experimental arguments\strong{:}
+character vector with entries "mnorm", "spls", "mrce",
+"sier", "mtps", "rmtl", "gpm" and others
+(requires packages \code{spls}, \code{MRCE}, \code{SiER}, \code{MTPS}, \code{RMTL} or \code{GPM})}
 
-\item{cvpred}{return cross-validated predicition: logical}
+\item{mice}{missing data imputation\strong{:}
+logical (\code{mice=TRUE} requires package \code{mice})}
+
+\item{cvpred}{return cross-validated predictions: logical}
+
+\item{times}{measure computation time\strong{:}
+logical}
 
 \item{...}{further arguments passed to \code{\link[glmnet]{glmnet}}
 and \code{\link[glmnet]{cv.glmnet}}}
