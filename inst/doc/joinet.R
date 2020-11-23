@@ -1,5 +1,5 @@
 ## ----setup, include=FALSE-----------------------------------------------------
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo=TRUE,eval=!grepl('SunOS',Sys.info()['sysname']))
 set.seed(1)
 
 ## ----eval=FALSE---------------------------------------------------------------
