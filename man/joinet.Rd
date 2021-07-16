@@ -13,18 +13,19 @@ joinet(
   type.measure = "deviance",
   alpha.base = 1,
   alpha.meta = 1,
+  weight = NULL,
+  sign = NULL,
   ...
 )
 }
 \arguments{
 \item{Y}{outputs\strong{:}
 numeric matrix with \eqn{n} rows (samples)
-and \eqn{q} columns (variables),
-with positive correlation (see details)}
+and \eqn{q} columns (outputs)}
 
 \item{X}{inputs\strong{:}
 numeric matrix with \eqn{n} rows (samples)
-and \eqn{p} columns (variables)}
+and \eqn{p} columns (inputs)}
 
 \item{family}{distribution\strong{:}
 vector of length \eqn{1} or \eqn{q} with entries
@@ -44,8 +45,19 @@ vector of length \eqn{1} or \eqn{q} with entries
 \item{alpha.base}{elastic net mixing parameter for base learners\strong{:}
 numeric between \eqn{0} (ridge) and \eqn{1} (lasso)}
 
-\item{alpha.meta}{elastic net mixing parameter for meta learner\strong{:}
+\item{alpha.meta}{elastic net mixing parameter for meta learners\strong{:}
 numeric between \eqn{0} (ridge) and \eqn{1} (lasso)}
+
+\item{weight}{input-output relations\strong{:}
+matrix with \eqn{p} rows (inputs) and \eqn{q} columns (outputs)
+with entries \eqn{0} (exclude) and \eqn{1} (include),
+or \code{NULL} (see details)}
+
+\item{sign}{output-output relations\strong{:}
+matrix with \eqn{q} rows ("meta-inputs") and \eqn{q} columns (outputs), 
+with entries \eqn{-1} (negative), \eqn{0} (none),
+\eqn{1} (positive) and \eqn{NA} (any),
+or \code{NULL} (see details)}
 
 \item{...}{further arguments passed to \code{\link[glmnet]{glmnet}}}
 }
@@ -62,9 +74,36 @@ The slots \code{base} and \code{meta} each contain
 Implements multivariate elastic net regression.
 }
 \details{
-\strong{correlation:}
-The \eqn{q} outcomes should be positively correlated.
-Avoid negative correlations by changing the sign of the variable.
+\strong{input-output relations:}
+In this matrix with \eqn{p} rows and \eqn{q} columns,
+the entry in the \eqn{j}th row and the \eqn{k}th column
+indicates whether the \eqn{j}th input may be used for 
+modelling the \eqn{k}th output
+(where \eqn{0} means "exclude" and
+\eqn{1} means "include").
+By default (\code{sign=NULL}),
+all entries are set to \eqn{1}.
+
+\strong{output-output relations:}
+In this matrix with \eqn{q} rows and \eqn{q} columns,
+the entry in the \eqn{l}th row and the \eqn{k}th column
+indicates how the \eqn{l}th output may be used for
+modelling the \eqn{k}th output
+(where \eqn{-1} means negative effect,
+\eqn{0} means no effect,
+\eqn{1} means positive effect,
+and \eqn{NA} means any effect).
+
+There are three short-cuts for filling up this matrix:
+(1) \code{sign=1} sets all entries to \eqn{1} (non-negativity constraints).
+This is useful if all pairs of outcomes
+are assumed to be \emph{positively} correlated
+(potentially after changing the sign of some outcomes).
+(2) \code{code=NA} sets all diagonal entries to \eqn{1}
+and all off-diagonal entries to \code{NA} (no constraints).
+(3) \code{sign=NULL} uses Spearman correlation to determine the entries,
+with \eqn{-1} for significant negative, \eqn{0} for insignificant,
+\eqn{1} for significant positive correlations.
 
 \strong{elastic net:}
 \code{alpha.base} controls input-output effects,
@@ -90,7 +129,7 @@ browseVignettes("joinet") # further examples}
 
 }
 \references{
-Armin Rauschenberger, Enrico Glaab (2020)
+Armin Rauschenberger, Enrico Glaab (2021)
 "Predicting correlated outcomes from molecular data"
 \emph{Manuscript in preparation}.
 }

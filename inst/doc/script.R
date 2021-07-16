@@ -1,13 +1,15 @@
 ## ----start,include=FALSE------------------------------------------------------
 knitr::opts_chunk$set(echo=TRUE,eval=FALSE)
-#setwd("C:/Users/armin.rauschenberger/Desktop/joinet")
-#source("C:/Users/armin.rauschenberger/Desktop/joinet/joinet/R/functions.R")
+#setwd("~/Desktop/joinet")
+#source("~/Desktop/joinet/package/R/functions.R")
 #pkgs <- c("devtools","missRanger","mice","mvtnorm","glmnet","earth","spls","MTPS","RMTL","MultivariateRandomForest","mcen","MRCE","remMap","SiER","GPM","MLPUGS","benchmarkme")
 #install.packages(pkgs)
 #devtools::install_github("rauschenberger/joinet")
-#devtools::intall_github("cran/MRCE"); devtools::intall_github("cran/remMap")
+#devtools::install_github("cran/QUIC")
+#devtools::install_github("cran/MRCE")
+#devtools::install_github("cran/remMap")
 #install.packages("joinet_0.0.X.tar.gz",repos=NULL,type="source")
-#library(joinet)
+library(joinet)
 
 ## ----figure_ABS---------------------------------------------------------------
 #  box <- function(x,y,w=0.2,h=0.2,labels="",col="black",turn=FALSE,...){
@@ -108,6 +110,7 @@ knitr::opts_chunk$set(echo=TRUE,eval=FALSE)
 
 ## ----simulation,eval=FALSE----------------------------------------------------
 #  #<<start>>
+#  library(joinet)
 #  
 #  grid <- list()
 #  grid$rho_x <- c(0.00,0.10,0.30)
@@ -124,10 +127,12 @@ knitr::opts_chunk$set(echo=TRUE,eval=FALSE)
 #  q <- 3
 #  foldid.ext <- rep(c(0,1),times=c(n0,n1))
 #  
-#  loss <- list(); cor <- numeric()
+#  loss <- list(); cor <- numeric(); seed <- list()
+#  set.seed(1) # new
 #  for(i in seq_len(nrow(grid))){
 #    p <- grid$p[i]
-#    set.seed(i)
+#    #set.seed(i) # old
+#    seed[[i]] <- .Random.seed # new
 #    cat("i =",i,"\n")
 #  
 #    #--- features ---
@@ -141,7 +146,8 @@ knitr::opts_chunk$set(echo=TRUE,eval=FALSE)
 #    sigma <- matrix(data=grid$rho_b[i],nrow=q,ncol=q)
 #    diag(sigma) <- 1
 #    beta <- mvtnorm::rmvnorm(n=p,mean=mean,sigma=sigma)
-#    beta <- 1*apply(beta,2,function(x) x>(sort(x,decreasing=TRUE)[grid$nzero[i]]))
+#    #beta <- 1*apply(beta,2,function(x) x>(sort(x,decreasing=TRUE)[grid$nzero[i]])) # old (either zero or one)
+#    beta <- 1*apply(beta,2,function(x) ifelse(x>sort(x,decreasing=TRUE)[grid$nzero[i]],x,0)) # new (either zero or non-zero)
 #  
 #    #-- effects --- (multivariate binomial)
 #    #sigma <- matrix(grid$rho_b[i],nrow=q,ncol=q); diag(sigma) <- 1
@@ -160,9 +166,9 @@ knitr::opts_chunk$set(echo=TRUE,eval=FALSE)
 #    #--- holdout ---
 #    alpha.base <- 1*(grid$nzero[i] <= 10) # sparse vs dense
 #    compare <- TRUE
-#    loss[[i]] <- tryCatch(expr=cv.joinet(Y=Y,X=X,family="gaussian",compare=compare,foldid.ext=foldid.ext,alpha.base=alpha.base,alpha.meta=1,times=TRUE),error=function(x) NA)
+#    loss[[i]] <- tryCatch(expr=cv.joinet(Y=Y,X=X,family="gaussian",compare=compare,foldid.ext=foldid.ext,alpha.base=alpha.base,alpha.meta=1,times=TRUE,sign=1),error=function(x) NA)
 #  }
-#  save(grid,loss,cor,file="results/simulation.RData")
+#  save(grid,loss,cor,seed,file="results/simulation.RData")
 #  writeLines(text=capture.output(utils::sessionInfo(),cat("\n"),sessioninfo::session_info()),con="results/info_sim.txt")
 
 ## ----figure_SIM,results="hide"------------------------------------------------
@@ -182,7 +188,11 @@ knitr::opts_chunk$set(echo=TRUE,eval=FALSE)
 #  
 #  #--- average ---
 #  loss <- lapply(loss,function(x) x$loss)
-#  prop <- sapply(loss[cond],function(x) rowMeans(100*x/matrix(x["none",],nrow=nrow(x),ncol=ncol(x),byrow=TRUE))[-nrow(x)])
+#  
+#  #prop <- sapply(loss[cond],function(x) rowMeans(100*x/matrix(x["none",],nrow=nrow(x),ncol=ncol(x),byrow=TRUE))[-nrow(x)]) # old (first re-scale, then average)
+#  mean <- sapply(loss,function(x) rowMeans(x)) # new (first average)
+#  prop <- 100*mean[rownames(mean)!="none",]/matrix(mean["none",],nrow=nrow(mean)-1,ncol=ncol(mean),byrow=TRUE) # new (then re-scale)
+#  
 #  mode <- ifelse(grid$p==10,"ld",ifelse(grid$nzero==5,"hd-s","hd-d"))
 #  set <- as.numeric(sapply(rownames(grid),function(x) strsplit(x,split="\\.")[[1]][[1]]))
 #  
@@ -193,10 +203,10 @@ knitr::opts_chunk$set(echo=TRUE,eval=FALSE)
 #  sort(round(rowMeans(apply(prop[mult,mode=="hd-d"],2,rank)),digits=1))
 #  
 #  #--- testing ---
-#  apply(prop[mult,],1,function(x) sum(tapply(X=x-prop["base",],INDEX=set,FUN=function(x) wilcox.test(x,alternative="less")$p.value<0.05),na.rm=TRUE))
+#  apply(prop[mult,],1,function(x) sum(tapply(X=x-prop["base",],INDEX=set,FUN=function(x) wilcox.test(x,alternative="less",exact=FALSE)$p.value<0.05),na.rm=TRUE))
 #  
-#  colSums(tapply(X=prop["meta",]-prop["base",],INDEX=list(set=set,mode=mode),FUN=function(x) wilcox.test(x,alternative="less")$p.value<0.05),na.rm=TRUE)
-#  colSums(tapply(X=prop["spls",]-prop["base",],INDEX=list(set=set,mode=mode),FUN=function(x) wilcox.test(x,alternative="less")$p.value<0.05),na.rm=TRUE)
+#  colSums(tapply(X=prop["meta",]-prop["base",],INDEX=list(set=set,mode=mode),FUN=function(x) wilcox.test(x,alternative="less",exact=FALSE)$p.value<0.05),na.rm=TRUE)
+#  colSums(tapply(X=prop["spls",]-prop["base",],INDEX=list(set=set,mode=mode),FUN=function(x) wilcox.test(x,alternative="less",exact=FALSE)$p.value<0.05),na.rm=TRUE)
 
 ## ----table_SIM,results="asis"-------------------------------------------------
 #  beta <- sapply(unique(set),function(i) rowMeans(prop[,set==i]))
@@ -217,7 +227,7 @@ knitr::opts_chunk$set(echo=TRUE,eval=FALSE)
 #  temp[3] <- paste0(temp[3],"$^2$")
 #  temp[8] <- "\\href{https://CRAN.R-project.org/package=MultivariateRandomForest}{\\texttt{MRF}}$^3$"
 #  rownames(beta) <- paste0("\\begin{sideways}",temp,"\\end{sideways}")
-#  xtable <- xtable::xtable(cbind(info,t(beta)),align=paste0("rccc",paste0(rep("c",times=nrow(beta)),collapse=""),collapse=""),caption="Mean loss of different models (as percentage of empty model) in low-dimensional (top), sparse high-dimensional (centre), and dense high-dimensional (bottom) settings. The first three columns indicate the correlation between inputs ($\\rho_x$), the correlation between effects ($\\rho_b$), and the resulting mean correlation between outputs ($\\rho_y$). For each setting, the colour black indicates which models are more predictive than univariate regression, and the underline indicates the most predictive model. $\\hfill$ \\footnotesize$^1$univariate and $^2$multivariate linear regression with \\cran{glmnet}, $^3$\\cran{MultivariateRandomForest}\\normalsize\\label{table_SIM}")
+#  xtable <- xtable::xtable(cbind(info,t(beta)),align=paste0("rccc",paste0(rep("c",times=nrow(beta)),collapse=""),collapse=""),caption="")
 #  xtable::print.xtable(xtable,comment=FALSE,floating=TRUE,sanitize.text.function=identity,hline.after=c(0,9,18,ncol(beta)),include.rownames=FALSE,size="\\footnotesize",caption.placement="top")
 
 ## ----data,eval=FALSE----------------------------------------------------------
@@ -300,6 +310,7 @@ knitr::opts_chunk$set(echo=TRUE,eval=FALSE)
 
 ## ----application,eval=FALSE---------------------------------------------------
 #  #<<start>>
+#  library(joinet)
 #  
 #  set.seed(1)
 #  load("results/data.RData",verbose=TRUE)
@@ -326,8 +337,8 @@ knitr::opts_chunk$set(echo=TRUE,eval=FALSE)
 #    x <- list(clinic=X,omics=Z,both=cbind(X,Z))[[table$data[i]]]
 #    alpha <- 1*(table$alpha[i]=="lasso")
 #    loss[[i]] <- cv.joinet(Y=y,X=x,alpha.base=alpha,foldid.ext=foldid.ext,
-#            foldid.int=foldid.int) # add joinet::
-#    #fit[[i]] <- joinet(Y=y,X=x,alpha.base=alpha,foldid=foldid.int)
+#            foldid.int=foldid.int,sign=1) # add joinet::
+#    #fit[[i]] <- joinet(Y=y,X=x,alpha.base=alpha,foldid=foldid.int,sign=1)
 #  }
 #  
 #  save(table,loss,file="results/internal.RData")
@@ -355,8 +366,8 @@ knitr::opts_chunk$set(echo=TRUE,eval=FALSE)
 #    x <- list(clinic=X,omics=Z,both=cbind(X,Z))[[table$data[i]]]
 #    alpha <- 1*(table$alpha[i]=="lasso")
 #    loss[[i]] <- cv.joinet(Y=y,X=x,alpha.base=alpha,
-#                  foldid.ext=foldid.ext,foldid.int=foldid.int) # add joinet::
-#    #fit[[i]] <- joinet(Y=y,X=x,alpha.base=alpha,foldid=foldid.int)
+#                  foldid.ext=foldid.ext,foldid.int=foldid.int,sign=1) # add joinet::
+#    #fit[[i]] <- joinet(Y=y,X=x,alpha.base=alpha,foldid=foldid.int,sign=1)
 #  }
 #  
 #  save(table,loss,file="results/external.RData")
