@@ -24,9 +24,10 @@
 #' to open the vignette.
 #' 
 #' @references
-#' Armin Rauschenberger and Enrico Glaab (2020).
-#' "Predicting correlated outcomes from molecular data".
-#' \emph{Manuscript in preparation}.
+#' Armin Rauschenberger, Enrico Glaab (2021)
+#' "Predicting correlated outcomes from molecular data"
+#' \emph{Bioinformatics}. btab576
+#' \doi{10.1093/bioinformatics/btab576}
 #' 
 #' \email{armin.rauschenberger@uni.lu}
 #'
@@ -92,4 +93,3 @@
 #' }
 #' 
 NULL
-
