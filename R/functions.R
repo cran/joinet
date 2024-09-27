@@ -67,11 +67,7 @@
 #' @param ...
 #' further arguments passed to \code{\link[glmnet]{glmnet}}
 #' 
-#' @references 
-#' Armin Rauschenberger, Enrico Glaab (2021)
-#' "Predicting correlated outcomes from molecular data"
-#' \emph{Bioinformatics}. btab576
-#' \doi{10.1093/bioinformatics/btab576}
+#' @inherit joinet-package references
 #' 
 #' @details
 #' \strong{input-output relations:}
@@ -199,7 +195,7 @@ joinet <- function(Y,X,family="gaussian",nfolds=10,foldid=NULL,type.measure="dev
   for(i in seq(from=1,to=q,by=1)){
     for(j in seq(from=i,to=q,by=1)){
       cor <- stats::cor.test(Y[,i],Y[,j],use="pairwise.complete.obs",method="spearman",exact=FALSE)
-      if(cor$p.value>0.05){next}
+      if(is.na(cor$p.value) | cor$p.value>0.05){next}
       if(null){
         sign[i,j] <- sign[j,i] <- sign(cor$estimate)
       } else if(!is.na(sign[i,j]) & sign[i,j]*sign(cor$estimate)==-1){
@@ -308,7 +304,8 @@ joinet <- function(Y,X,family="gaussian",nfolds=10,foldid=NULL,type.measure="dev
     base[[i]]$cvm <- palasso:::.loss(y=Y[cond,i],fit=fit[cond,],
                                      family=family[i],type.measure=type.measure)[[1]]
     base[[i]]$lambda.min <- base[[i]]$lambda[which.min(base[[i]]$cvm)]
-    class(base[[i]]) <- "cv.glmnet" # trial 2020-01-10
+    base[[i]]$nzero <- base[[i]]$cvsd <- base[[i]]$lambda.1se <- NA
+    class(base[[i]]) <- "cv.glmnet"
   }
   
   #--- predictions ---
@@ -580,6 +577,7 @@ weights.joinet <- function(object,...){
   return(coef)
 }
 
+#' @exportS3Method
 print.joinet <- function(x,...){
   cat(paste0("joinet object"),"\n")
 }
@@ -743,6 +741,8 @@ cv.joinet <- function(Y,X,family="gaussian",nfolds.ext=5,nfolds.int=10,foldid.ex
         stop("Method \"",compare[i],"\" requires package \"",pkg,"\".",call.=FALSE)
       }
     }
+  } else {
+    compare <- character(0)
   }
 
   #--- checks ---
@@ -1345,6 +1345,4 @@ plot.matrix <- function (X, margin = 0, labels = TRUE, las = 1, cex = 1, range =
 #   }
 #   return(list(model = model, y.fitted = y.fitted, predFun = predFun))
 # }
-# 
-# 
-# 
+

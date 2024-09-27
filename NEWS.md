@@ -1,4 +1,8 @@
 
+## joinet 1.0.0 (2024-09-24)
+
+* updated documentation
+
 ## joinet 0.0.10 (2021-08-05)
 
 * udpated documentation
